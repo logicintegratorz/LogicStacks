@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+const categoryController = require('../controllers/categoryController');
+const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
+
+// All category routes require admin auth
+router.use(authMiddleware, adminMiddleware);
+
+router.get('/', categoryController.getAllCategories);
+router.post('/', categoryController.createCategory);
+router.put('/:id', categoryController.updateCategory);
+router.delete('/:id', categoryController.deleteCategory);
+
+module.exports = router;
