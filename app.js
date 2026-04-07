@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
+const issueRoutes = require('./routes/issueRoutes');
 const errorHandler = require('./middlewares/errorMiddleware');
 
 const app = express();
@@ -17,6 +19,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/issues', issueRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

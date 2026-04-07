@@ -9,6 +9,8 @@ import Products from './pages/Products';
 import ProductFormPage from './pages/ProductFormPage';
 import Layout from './components/Layout';
 import Register from './pages/Register';
+import IssueWIO from './pages/IssueWIO';
+import IssueList from './pages/IssueList';
 
 import './App.css';
 
@@ -26,6 +28,8 @@ function App() {
             <Route path="/products" element={<Layout><Products /></Layout>} />
             <Route path="/products/add" element={<Layout><ProductFormPage /></Layout>} />
             <Route path="/products/edit/:id" element={<Layout><ProductFormPage /></Layout>} />
+            <Route path="/issue" element={<Layout><IssueWIO /></Layout>} />
+            <Route path="/issue/list" element={<Layout><IssueList /></Layout>} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
