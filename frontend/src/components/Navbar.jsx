@@ -11,6 +11,8 @@ const Navbar = () => {
     { name: 'Order', path: '/order' },
     { name: 'Gate', path: '/gate' },
     { name: 'Receipt', path: '/receipt' },
+    { name: 'Indent Add', path: '/indent/add' },
+    { name: 'Indents', path: '/indent/list' },
     { name: 'Issue', path: '/issue' },
     { name: 'Issue List', path: '/issue/list' },
     { name: 'Operations', path: '/operations' },

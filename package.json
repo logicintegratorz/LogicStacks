@@ -1,7 +1,15 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "A full-stack Inventory Management application built with **Node.js/Express** (Backend), **React/Vite** (Frontend), and **PostgreSQL** (Database). This project follows a strict MVC (Model-View-Controller) architecture for professional-grade scalability and maintenance.",
+  "homepage": "https://github.com/logicintegratorz/LogicStacks#readme",
+  "bugs": {
+    "url": "https://github.com/logicintegratorz/LogicStacks/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logicintegratorz/LogicStacks.git"
+  },
   "license": "ISC",
   "author": "",
   "type": "commonjs",

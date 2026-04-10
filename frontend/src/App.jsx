@@ -11,6 +11,8 @@ import Layout from './components/Layout';
 import Register from './pages/Register';
 import IssueWIO from './pages/IssueWIO';
 import IssueList from './pages/IssueList';
+import IndentAdd from './pages/IndentAdd';
+import IndentList from './pages/IndentList';
 
 import './App.css';
 
@@ -30,6 +32,8 @@ function App() {
             <Route path="/products/edit/:id" element={<Layout><ProductFormPage /></Layout>} />
             <Route path="/issue" element={<Layout><IssueWIO /></Layout>} />
             <Route path="/issue/list" element={<Layout><IssueList /></Layout>} />
+            <Route path="/indent/add" element={<Layout><IndentAdd /></Layout>} />
+            <Route path="/indent/list" element={<Layout><IndentList /></Layout>} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
