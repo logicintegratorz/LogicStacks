@@ -7,6 +7,7 @@ const productRoutes = require('./routes/productRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const issueRoutes = require('./routes/issueRoutes');
 const indentRoutes = require('./routes/indentRoutes');
+const poRoutes = require('./routes/poRoutes');
 const errorHandler = require('./middlewares/errorMiddleware');
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/indent', indentRoutes);
+app.use('/api/purchase-order', poRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

@@ -7,13 +7,18 @@ class IndentModel {
     try {
       await client.query('BEGIN');
       
+      // Auto-generate intend_no
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const intendNo = `INT-${dateStr}-${randomSuffix}`;
+
       // Insert Indent
       const insertIndentQuery = `
-        INSERT INTO indents (indent_date, remarks)
-        VALUES ($1, $2)
-        RETURNING id, indent_date, remarks, created_at
+        INSERT INTO indents (intend_no, intend_date, remarks)
+        VALUES ($1, $2, $3)
+        RETURNING id, intend_no, intend_date, remarks, created_at
       `;
-      const indentRes = await client.query(insertIndentQuery, [indentData.indentDate, indentData.remarks]);
+      const indentRes = await client.query(insertIndentQuery, [intendNo, indentData.indentDate, indentData.remarks]);
       const newIndent = indentRes.rows[0];
       
       // Insert Items
@@ -44,7 +49,9 @@ class IndentModel {
     const query = `
       SELECT 
         i.id,
-        i.indent_date,
+        i.intend_no,
+        i.intend_date AS indent_date,
+        i.status,
         i.remarks,
         i.created_at,
         JSON_AGG(

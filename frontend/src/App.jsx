@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -13,12 +14,15 @@ import IssueWIO from './pages/IssueWIO';
 import IssueList from './pages/IssueList';
 import IndentAdd from './pages/IndentAdd';
 import IndentList from './pages/IndentList';
+import POAdd from './pages/POAdd';
+import POList from './pages/POList';
 
 import './App.css';
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -34,6 +38,8 @@ function App() {
             <Route path="/issue/list" element={<Layout><IssueList /></Layout>} />
             <Route path="/indent/add" element={<Layout><IndentAdd /></Layout>} />
             <Route path="/indent/list" element={<Layout><IndentList /></Layout>} />
+            <Route path="/po/add" element={<Layout><POAdd /></Layout>} />
+            <Route path="/po/list" element={<Layout><POList /></Layout>} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

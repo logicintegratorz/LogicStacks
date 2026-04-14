@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const indentController = require('../controllers/indentController');
-const authMiddleware = require('../middlewares/authMiddleware'); // if applicable?
+const intentController = require('../controllers/intentController');
 
-// In app.js or existing routes, it doesn't look like we strictly apply authMiddleware on all routes, let's keep it simple or align with others.
-// The user has standard route setup. We'll simply use standard routing.
+// Using /intent but the file is currently registered as /api/indent in app.js
+// So the base URL remains /api/indent if app.js isn't changed.
+// That's fine, let's just make it handle the root / and /:id.
 
-router.get('/', indentController.getIndents);
-router.post('/', indentController.createIndent);
+router.post('/', intentController.createIntent);
+router.get('/', intentController.getIntents);
+router.get('/:id', intentController.getIntentById);
+router.put('/:id/approve', intentController.approveIntent);
+router.put('/:id/complete', intentController.completeIntent);
 
 module.exports = router;
