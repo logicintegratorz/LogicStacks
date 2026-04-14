@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import Modal from '../components/Modal';
 
 const POList = () => {
   const navigate = useNavigate();
@@ -11,6 +12,11 @@ const POList = () => {
   // Filters State
   const [statusFilter, setStatusFilter] = useState('All');
   const [approvalFilter, setApprovalFilter] = useState('All');
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPO, setSelectedPO] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     fetchPOs();
@@ -28,6 +34,25 @@ const POList = () => {
       console.error('Error fetching POs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleView = async (id) => {
+    setIsModalOpen(true);
+    setModalLoading(true);
+    try {
+      const response = await api.get(`/purchase-order/${id}`);
+      if (response.data && response.data.success) {
+        setSelectedPO(response.data.data);
+      } else {
+         toast.error('Failed to load PO details');
+         setIsModalOpen(false);
+      }
+    } catch (err) {
+      toast.error('Server error fetching PO');
+      setIsModalOpen(false);
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -184,18 +209,28 @@ const POList = () => {
                         {getStatusBadge(po.status)}
                       </td>
                       <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                          
+                          {/* View Button */}
+                          <button onClick={() => handleView(po.id)} title="View PO Details" style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid #c6f6d5', background: '#f0fff4', color: '#38a169', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          </button>
+
                           {po.approval_status === 'Pending' && (
                             <>
-                              <button onClick={() => handleUpdateStatus(po.id, 'approval_status', 'Approved')} style={{ padding: '4px 8px', background: '#48bb78', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Approve</button>
-                              <button onClick={() => handleUpdateStatus(po.id, 'approval_status', 'Rejected')} style={{ padding: '4px 8px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Reject</button>
+                              <button onClick={() => handleUpdateStatus(po.id, 'approval_status', 'Approved')} title="Approve" style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid #bbf7d0', background: '#48bb78', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                              </button>
+                              <button onClick={() => handleUpdateStatus(po.id, 'approval_status', 'Rejected')} title="Reject" style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid #fed7d7', background: '#f56565', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                              </button>
                             </>
                           )}
                           {(po.approval_status === 'Approved' && po.status === 'Draft') && (
-                            <button onClick={() => handleUpdateStatus(po.id, 'status', 'Ordered')} style={{ padding: '4px 8px', background: '#3182ce', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Order</button>
+                            <button onClick={() => handleUpdateStatus(po.id, 'status', 'Ordered')} style={{ padding: '6px 10px', background: '#3182ce', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Order</button>
                           )}
                           {po.status === 'Ordered' && (
-                            <button onClick={() => handleUpdateStatus(po.id, 'status', 'Received')} style={{ padding: '4px 8px', background: '#48bb78', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Mark Received</button>
+                            <button onClick={() => handleUpdateStatus(po.id, 'status', 'Received')} style={{ padding: '6px 10px', background: '#48bb78', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Mark Received</button>
                           )}
                         </div>
                       </td>
@@ -207,6 +242,50 @@ const POList = () => {
           </div>
         )}
       </div>
+
+      {/* PO View Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Purchase Order Details" maxWidth="750px">
+        {modalLoading ? (
+          <p style={{ textAlign: 'center', padding: '20px', color: '#718096' }}>Loading PO Details...</p>
+        ) : selectedPO ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: '#f7fafc', padding: '16px', borderRadius: '8px' }}>
+              <div><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>PO Number</span><div style={{fontWeight: 600, color: '#2b6cb0', fontSize: '15px'}}>{selectedPO.po_number}</div></div>
+              <div style={{textAlign: 'right'}}><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>Date</span><div style={{fontWeight: 600, color: '#2d3748', fontSize: '15px'}}>{new Date(selectedPO.po_date).toLocaleDateString('en-GB')}</div></div>
+              <div><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>Vendor</span><div style={{fontWeight: 600, color: '#2d3748', fontSize: '15px'}}>{selectedPO.vendor_name}</div></div>
+              <div style={{textAlign: 'right'}}><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>Status</span><div style={{fontWeight: 600, color: '#2d3748', fontSize: '15px'}}>{selectedPO.status}</div></div>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', border: '1px solid #e2e8f0' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #edf2f7', background: '#f7fafc' }}>
+                  <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#4a5568' }}>Item Name</th>
+                  <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#4a5568', textAlign: 'right' }}>Quantity</th>
+                  <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#4a5568', textAlign: 'right' }}>Rate</th>
+                  <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#4a5568', textAlign: 'right' }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(selectedPO.items || []).map((item, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #edf2f7' }}>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2d3748', fontWeight: 500 }}>{item.product_name}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#4a5568', textAlign: 'right' }}>{Number(item.quantity).toFixed(2)} {item.unit}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#4a5568', textAlign: 'right' }}>₹{Number(item.price).toFixed(2)}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#4a5568', textAlign: 'right' }}>₹{Number(item.amount).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="3" style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 'bold', color: '#2d3748', textAlign: 'right' }}>Total Amount:</td>
+                  <td style={{ padding: '12px 16px', fontSize: '15px', fontWeight: 'bold', color: '#2b6cb0', textAlign: 'right' }}>₹{Number(selectedPO.total_amount).toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        ) : null}
+      </Modal>
+
     </div>
   );
 };

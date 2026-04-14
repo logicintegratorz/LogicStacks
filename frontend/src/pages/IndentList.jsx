@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import Modal from '../components/Modal';
 
 const IndentList = () => {
   const navigate = useNavigate();
@@ -12,6 +13,10 @@ const IndentList = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('');
   const [approvalFilter, setApprovalFilter] = useState('All');
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIndent, setSelectedIndent] = useState(null);
 
   useEffect(() => {
     fetchIndents();
@@ -112,6 +117,11 @@ const IndentList = () => {
     let bg = '#ed8936'; // Incomplete - Orange
     if (status === 'Complete') bg = '#48bb78'; // Green
     return <span style={{ display: 'inline-flex', padding: '4px 10px', background: bg, color: '#fff', borderRadius: '12px', fontSize: '11px', fontWeight: '600' }}>{status}</span>;
+  };
+
+  const handleView = (indent) => {
+    setSelectedIndent(indent);
+    setIsModalOpen(true);
   };
 
   return (
@@ -241,15 +251,25 @@ const IndentList = () => {
                         {getStatusBadge(indent.status)}
                       </td>
                       <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+                          
+                          {/* View Button (Green) */}
+                          <button onClick={() => handleView(indent)} title="View Intent Details" style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid #c6f6d5', background: '#f0fff4', color: '#38a169', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          </button>
+                          
                           {indent.approval_status === 'Pending' && (
                             <>
-                              <button onClick={() => handleApprove(indent.id)} style={{ padding: '4px 8px', background: '#48bb78', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Approve</button>
-                              <button onClick={() => handleReject(indent.id)} style={{ padding: '4px 8px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>Reject</button>
+                              <button onClick={() => handleApprove(indent.id)} title="Approve" style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid #bbf7d0', background: '#48bb78', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                              </button>
+                              <button onClick={() => handleReject(indent.id)} title="Reject" style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid #fed7d7', background: '#f56565', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                              </button>
                             </>
                           )}
-                          <button onClick={() => handleComplete(indent.id, indent.status)} style={{ padding: '4px 8px', background: '#3182ce', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
-                            {indent.status === 'Complete' ? 'Mark Incomplete' : 'Mark Complete'}
+                          <button onClick={() => handleComplete(indent.id, indent.status)} title={indent.status === 'Complete' ? 'Mark Incomplete' : 'Mark Complete'} style={{ padding: '6px 10px', background: '#3182ce', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>
+                            {indent.status === 'Complete' ? 'Undo Complete' : 'Complete'}
                           </button>
                         </div>
                       </td>
@@ -261,6 +281,39 @@ const IndentList = () => {
           </div>
         )}
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Intend Details">
+        {selectedIndent && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: '#f7fafc', padding: '16px', borderRadius: '8px' }}>
+              <div><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>Req. No.</span><div style={{fontWeight: 600, color: '#2d3748', fontSize: '15px'}}>{selectedIndent.intend_no}</div></div>
+              <div style={{textAlign: 'right'}}><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>Date</span><div style={{fontWeight: 600, color: '#2d3748', fontSize: '15px'}}>{new Date(selectedIndent.indent_date).toLocaleDateString('en-GB')}</div></div>
+              <div><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>Added By</span><div style={{fontWeight: 600, color: '#2d3748', fontSize: '15px'}}>Admin</div></div>
+              <div style={{textAlign: 'right'}}><span style={{color: '#a0aec0', fontSize: '12px', display: 'block'}}>Approved By</span><div style={{fontWeight: 600, color: '#2d3748', fontSize: '15px'}}>{selectedIndent.approval_status === 'Approved' ? 'Admin' : '-'}</div></div>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', border: '1px solid #e2e8f0' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #edf2f7', background: '#f7fafc' }}>
+                  <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#4a5568' }}>Sr. No.</th>
+                  <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#4a5568' }}>Item Desc</th>
+                  <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#4a5568' }}>Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(selectedIndent.items || []).map((item, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #edf2f7' }}>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#4a5568' }}>{idx + 1}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2d3748', fontWeight: 500 }}>{item.product_name || 'N/A'}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#4a5568' }}>{item.quantity} {item.unit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Modal>
+
     </div>
   );
 };

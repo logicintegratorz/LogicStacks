@@ -16,6 +16,8 @@ import IndentAdd from './pages/IndentAdd';
 import IndentList from './pages/IndentList';
 import POAdd from './pages/POAdd';
 import POList from './pages/POList';
+import VendorAdd from './pages/VendorAdd';
+import VendorList from './pages/VendorList';
 
 import './App.css';
 
@@ -40,6 +42,8 @@ function App() {
             <Route path="/indent/list" element={<Layout><IndentList /></Layout>} />
             <Route path="/po/add" element={<Layout><POAdd /></Layout>} />
             <Route path="/po/list" element={<Layout><POList /></Layout>} />
+            <Route path="/vendors" element={<Layout><VendorList /></Layout>} />
+            <Route path="/vendors/add" element={<Layout><VendorAdd /></Layout>} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
