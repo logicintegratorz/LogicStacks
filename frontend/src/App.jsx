@@ -18,6 +18,8 @@ import POAdd from './pages/POAdd';
 import POList from './pages/POList';
 import VendorAdd from './pages/VendorAdd';
 import VendorList from './pages/VendorList';
+import GateEntryList from './pages/GateEntryList';
+import GateVerification from './pages/GateVerification';
 
 import './App.css';
 
@@ -44,6 +46,8 @@ function App() {
             <Route path="/po/list" element={<Layout><POList /></Layout>} />
             <Route path="/vendors" element={<Layout><VendorList /></Layout>} />
             <Route path="/vendors/add" element={<Layout><VendorAdd /></Layout>} />
+            <Route path="/gate-entry" element={<Layout><GateEntryList /></Layout>} />
+            <Route path="/gate-entry/verify" element={<Layout><GateVerification /></Layout>} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

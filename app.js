@@ -9,6 +9,7 @@ const issueRoutes = require('./routes/issueRoutes');
 const indentRoutes = require('./routes/indentRoutes');
 const poRoutes = require('./routes/poRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
+const gateEntryRoutes = require('./routes/gateEntryRoutes');
 const errorHandler = require('./middlewares/errorMiddleware');
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/issues', issueRoutes);
 app.use('/api/indent', indentRoutes);
 app.use('/api/purchase-order', poRoutes);
 app.use('/api/vendors', vendorRoutes);
+app.use('/api/gate-entry', gateEntryRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

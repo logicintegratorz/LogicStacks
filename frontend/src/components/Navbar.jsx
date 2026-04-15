@@ -9,7 +9,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/dashboard' },
     { name: 'Order', path: '/order' },
-    { name: 'Gate', path: '/gate' },
+    { name: 'Gate Entry', path: '/gate-entry' },
     { name: 'Receipt', path: '/receipt' },
     { name: 'Indent Add', path: '/indent/add' },
     { name: 'Indents', path: '/indent/list' },
