@@ -232,6 +232,9 @@ const POList = () => {
                           {po.status === 'Ordered' && (
                             <button onClick={() => handleUpdateStatus(po.id, 'status', 'Received')} style={{ padding: '6px 10px', background: '#48bb78', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Mark Received</button>
                           )}
+                          {(po.status === 'Received' || po.status === 'Partially Received' || po.approval_status === 'Approved') && (
+                            <button onClick={() => navigate('/po/add', { state: { reorderPOId: po.id } })} title="Reorder" style={{ padding: '6px 10px', background: '#ed8936', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Reorder</button>
+                          )}
                         </div>
                       </td>
                     </tr>

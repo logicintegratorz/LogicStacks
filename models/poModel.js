@@ -14,9 +14,9 @@ class POModel {
 
       // Insert Purchase Order
       const insertPOQuery = `
-        INSERT INTO purchase_orders (po_number, intent_id, vendor_id, po_date, remarks, terms_conditions, total_amount)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id, po_number, intent_id, vendor_id, po_date, status, approval_status, remarks, terms_conditions, total_amount, created_at
+        INSERT INTO purchase_orders (po_number, intent_id, vendor_id, po_date, remarks, terms_conditions, total_amount, parent_po_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, po_number, intent_id, vendor_id, po_date, status, approval_status, remarks, terms_conditions, total_amount, parent_po_id, created_at
       `;
       const poRes = await client.query(insertPOQuery, [
         poNumber,
@@ -25,7 +25,8 @@ class POModel {
         poData.poDate,
         poData.remarks,
         poData.termsConditions,
-        poData.totalAmount
+        poData.totalAmount,
+        poData.parentPoId || null
       ]);
 
       const newPO = poRes.rows[0];
@@ -72,6 +73,7 @@ class POModel {
         po.remarks,
         po.terms_conditions,
         po.total_amount,
+        po.parent_po_id,
         po.created_at,
         v.name AS vendor_name,
         i.intend_no AS intent_no
@@ -95,13 +97,17 @@ class POModel {
         po.remarks,
         po.terms_conditions,
         po.total_amount,
+        po.parent_po_id,
         po.created_at,
+        po.vendor_id,
+        po.intent_id,
         v.name AS vendor_name,
         i.intend_no AS intent_no,
         JSON_AGG(
           JSON_BUILD_OBJECT(
             'id', poi.id,
             'product_id', poi.product_id,
+            'intent_item_id', poi.intent_item_id,
             'product_name', p.name,
             'quantity', poi.quantity,
             'unit', poi.unit,

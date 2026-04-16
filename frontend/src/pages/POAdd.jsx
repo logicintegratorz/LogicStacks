@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const POAdd = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const reorderPOId = location.state?.reorderPOId;
   const today = new Date().toISOString().split('T')[0];
 
   const [poDate, setPoDate] = useState(today);
+  const [parentPoId, setParentPoId] = useState(null);
+  const [parentPoNumber, setParentPoNumber] = useState('');
   const [vendorId, setVendorId] = useState('');
   const [vendors, setVendors] = useState([]);
   const [intents, setIntents] = useState([]);
@@ -24,7 +28,42 @@ const POAdd = () => {
     fetchVendors();
     fetchIntents();
     fetchProducts();
-  }, []);
+    if (reorderPOId) {
+       fetchReorderData(reorderPOId);
+    }
+  }, [reorderPOId]);
+
+  const fetchReorderData = async (id) => {
+    try {
+      const res = await api.get(`/purchase-order/${id}`);
+      if (res.data.success) {
+         const oldPo = res.data.data;
+         setVendorId(String(oldPo.vendor_id)); // Use string for select box
+         setRemarks(oldPo.remarks || '');
+         setTermsConditions(oldPo.terms_conditions || '');
+         setParentPoId(oldPo.id);
+         setParentPoNumber(oldPo.po_number);
+         
+         if (oldPo.items && oldPo.items.length > 0) {
+            const mappedItems = oldPo.items.map((item, idx) => ({
+              id: Date.now() + idx,
+              intentId: oldPo.intent_id ? String(oldPo.intent_id) : '',
+              intentItemId: item.intent_item_id || null,
+              productId: String(item.product_id),
+              nameLabel: item.product_name,
+              quantity: item.quantity,
+              unit: item.unit,
+              price: item.price,
+              amount: item.amount
+            }));
+            setItems(mappedItems);
+         }
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to load Reorder data');
+    }
+  };
 
   const fetchVendors = async () => {
     try {
@@ -150,12 +189,17 @@ const POAdd = () => {
     const invalidItem = items.find(i => !i.productId || parseFloat(i.quantity) <= 0 || parseFloat(i.price) < 0);
     if (invalidItem) return toast.error('Check rows: select product, positive quantity, valid price.');
 
+    // Derive po-level intentId
+    const poIntentId = items.find(i => i.intentId)?.intentId || null;
+
     try {
       const payload = {
+        intentId: poIntentId,
         vendorId,
         poDate,
         remarks,
         termsConditions,
+        parentPoId,
         items: items.map(i => ({
           productId: i.productId,
           intentItemId: i.intentItemId || null,
@@ -193,6 +237,12 @@ const POAdd = () => {
           </div>
         </div>
       </div>
+      
+      {parentPoNumber && (
+         <div style={{ background: '#ebf4ff', color: '#2b6cb0', padding: '10px 15px', borderRadius: '6px', marginBottom: '20px', fontWeight: 'bold', fontSize: '14px', display: 'inline-block' }}>
+            Reordered from {parentPoNumber}
+         </div>
+      )}
 
       <div style={{ background: '#fff', borderRadius: '8px', padding: '30px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', width: '100%', boxSizing: 'border-box' }}>
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>

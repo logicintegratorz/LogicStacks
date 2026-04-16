@@ -3,7 +3,7 @@ const VendorModel = require('../models/vendorModel');
 
 exports.createPO = async (req, res, next) => {
   try {
-    const { vendorId, poDate, remarks, termsConditions, items } = req.body;
+    const { vendorId, poDate, remarks, termsConditions, items, parentPoId } = req.body;
 
     if (!vendorId || !items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Vendor and at least one item are required' });
@@ -31,7 +31,8 @@ exports.createPO = async (req, res, next) => {
       poDate: poDate || new Date().toISOString().split('T')[0],
       remarks,
       termsConditions,
-      totalAmount
+      totalAmount,
+      parentPoId
     };
 
     const newPO = await POModel.create(poData, validatedItems);

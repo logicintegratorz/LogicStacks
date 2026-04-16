@@ -61,17 +61,21 @@ const GateVerification = () => {
 
   const calculateTotals = () => {
     let totalReceivedAmt = 0;
-    let orderTotalAmt = 0;
+    let totalOrderedAmt = 0;
 
     items.forEach(item => {
-      totalReceivedAmt += (item.received_quantity * item.unit_price);
-      orderTotalAmt += item.amount;
+      const item_total = (parseFloat(item.received_quantity) || 0) * (parseFloat(item.unit_price) || 0);
+      item.item_total = item_total; // Maintain value of each received item
+      totalReceivedAmt += item_total;
+      totalOrderedAmt += (parseFloat(item.ordered_quantity) || 0) * (parseFloat(item.unit_price) || 0);
     });
 
-    return { totalReceivedAmt, orderTotalAmt };
+    const totalDifference = totalOrderedAmt - totalReceivedAmt;
+
+    return { totalReceivedAmt, totalOrderedAmt, totalDifference };
   };
 
-  const { totalReceivedAmt, orderTotalAmt } = calculateTotals();
+  const { totalReceivedAmt, totalOrderedAmt, totalDifference } = calculateTotals();
 
   const handleVerify = async () => {
     if (overReceiptWarning && !overrideApproved) {
@@ -92,12 +96,13 @@ const GateVerification = () => {
         }
         
         return {
+          id: item.id,
           productId: item.product_id,
           orderedQuantity: item.ordered_quantity,
           receivedQuantity: item.received_quantity,
           unitPrice: item.unit_price,
-          totalPrice: item.received_quantity * item.unit_price,
-          differenceQuantity: item.ordered_quantity - totalQtyNow
+          totalPrice: item.item_total, // use the explicitly maintained value
+          differenceQuantity: item.ordered_quantity - item.received_quantity // correctly tracking just what is missing from this transaction
         };
       });
 
@@ -173,7 +178,8 @@ const GateVerification = () => {
                   <th style={{ padding: '12px', fontSize: '11px', fontWeight: '700', color: '#a0aec0', textTransform: 'uppercase' }}>Item</th>
                   <th style={{ padding: '12px', fontSize: '11px', fontWeight: '700', color: '#a0aec0', textTransform: 'uppercase', textAlign: 'right' }}>Ordered</th>
                   <th style={{ padding: '12px', fontSize: '11px', fontWeight: '700', color: '#a0aec0', textTransform: 'uppercase', textAlign: 'right' }}>Past Recv.</th>
-                  <th style={{ padding: '12px', fontSize: '11px', fontWeight: '700', color: '#2b6cb0', textTransform: 'uppercase', textAlign: 'right' }}>Now Receiving</th>
+                  <th style={{ padding: '12px', fontSize: '11px', fontWeight: '700', color: '#a0aec0', textTransform: 'uppercase', textAlign: 'right' }}>Now Receiving</th>
+                  <th style={{ padding: '12px', fontSize: '11px', fontWeight: '700', color: '#a0aec0', textTransform: 'uppercase', textAlign: 'right' }}>Amt Received</th>
                   <th style={{ padding: '12px', fontSize: '11px', fontWeight: '700', color: '#a0aec0', textTransform: 'uppercase', textAlign: 'center' }}>Status</th>
                 </tr>
               </thead>
@@ -201,6 +207,9 @@ const GateVerification = () => {
                            onChange={(e) => handleQuantityChange(index, e.target.value)}
                            style={{ width: '80px', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e0', textAlign: 'right', fontWeight: 'bold', color: '#2b6cb0' }}
                          />
+                       </td>
+                       <td style={{ padding: '12px', fontSize: '13px', color: '#38a169', textAlign: 'right', fontWeight: '600' }}>
+                          ₹{item.item_total ? item.item_total.toFixed(2) : '0.00'}
                        </td>
                        <td style={{ padding: '12px', textAlign: 'center' }}>
                           {isOver && <span style={{ color: '#e53e3e', fontSize: '11px', fontWeight: 'bold' }}>OVER</span>}
@@ -253,8 +262,8 @@ const GateVerification = () => {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#718096' }}>
                  <span>Amount Difference:</span>
-                 <span style={{ fontWeight: '600', color: (totalReceivedAmt - orderTotalAmt) > 0 ? '#e53e3e' : '#38a169' }}>
-                    {totalReceivedAmt - orderTotalAmt > 0 ? '+' : ''}{(totalReceivedAmt - orderTotalAmt).toFixed(2)}
+                 <span style={{ fontWeight: '600', color: totalDifference < 0 ? '#e53e3e' : '#d69e2e' }}>
+                    {totalDifference < 0 ? '-' : ''}₹{Math.abs(totalDifference).toFixed(2)}
                  </span>
               </div>
            </div>

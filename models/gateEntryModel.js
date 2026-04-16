@@ -46,9 +46,9 @@ class GateEntryModel {
         const updatePoItemsQuery = `
           UPDATE purchase_order_items
           SET received_quantity = received_quantity + $1
-          WHERE purchase_order_id = $2 AND product_id = $3
+          WHERE id = $2
         `;
-        await client.query(updatePoItemsQuery, [item.receivedQuantity, entryData.poId, item.productId]);
+        await client.query(updatePoItemsQuery, [item.receivedQuantity, item.id]);
       }
 
       // 3. Update Purchase Order Status

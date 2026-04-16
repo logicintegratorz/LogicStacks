@@ -16,7 +16,7 @@ class GateEntryController {
           v.name AS vendor_name,
           JSON_AGG(
             JSON_BUILD_OBJECT(
-              'id', poi.product_id,
+              'id', poi.id,
               'product_id', poi.product_id,
               'product_name', p.name,
               'quantity', poi.quantity,
