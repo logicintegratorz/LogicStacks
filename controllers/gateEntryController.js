@@ -1,12 +1,12 @@
 const GateEntryModel = require('../models/gateEntryModel');
-const db = require('../config/db'); // Needed if querying pending POs directly or we can use POModel
+const db = require('../config/db');
 
 class GateEntryController {
-  // Get POs that are approved and ready for gate entry
+  // Get POs that are approved and ready for gate entry (Ordered or Partially Received)
   static async getPendingPOs(req, res) {
     try {
       const query = `
-        SELECT 
+        SELECT
           po.id,
           po.po_number,
           po.po_date,
@@ -30,8 +30,9 @@ class GateEntryController {
         JOIN vendors v ON po.vendor_id = v.id
         LEFT JOIN purchase_order_items poi ON po.id = poi.purchase_order_id
         LEFT JOIN products p ON poi.product_id = p.id
-        WHERE po.approval_status = 'Approved' 
+        WHERE po.approval_status = 'Approved'
           AND po.status IN ('Ordered', 'Partially Received')
+          AND po.is_deleted = FALSE
         GROUP BY po.id, v.name
         ORDER BY po.created_at ASC
       `;
@@ -43,11 +44,11 @@ class GateEntryController {
     }
   }
 
-  // Create gate entry
+  // Create gate entry — over-receipt allowed, extra_qty tracked
   static async verifyAndReceive(req, res) {
     try {
       const { poId, remarks, totalReceivedAmount, items, status } = req.body;
-      const gatekeeperId = req.user ? req.user.id : null; // Assuming auth middleware sets req.user
+      const gatekeeperId = req.user ? req.user.id : null;
 
       if (!poId || !items || !items.length) {
         return res.status(400).json({ error: 'PO ID and items are required' });
@@ -59,21 +60,29 @@ class GateEntryController {
         receivedDate: new Date().toISOString().slice(0, 10),
         totalReceivedAmount,
         remarks,
-        status // 'FULLY_RECEIVED' or 'PARTIAL'
+        status
       };
 
       const result = await GateEntryModel.create(entryData, items);
-      res.status(201).json({ message: 'Gate entry created successfully', data: result });
+      res.status(201).json({
+        message: 'Gate entry created successfully',
+        data: result,
+        poStatus: result.poStatus
+      });
     } catch (error) {
       console.error('Error creating gate entry:', error);
+      if (error.message && error.message.includes('negative')) {
+        return res.status(400).json({ error: error.message });
+      }
       res.status(500).json({ error: 'Failed to create gate entry' });
     }
   }
 
-  // Get all gate entries
+  // Get all gate entries with optional filters
   static async getAll(req, res) {
     try {
-      const entries = await GateEntryModel.getAll();
+      const { status, poId, vendorId, dateFrom, dateTo, search } = req.query;
+      const entries = await GateEntryModel.getAll({ status, poId, vendorId, dateFrom, dateTo, search });
       res.json(entries);
     } catch (error) {
       console.error('Error fetching gate entries:', error);
@@ -81,7 +90,7 @@ class GateEntryController {
     }
   }
 
-  // Get single gate entry
+  // Get single gate entry detail
   static async getById(req, res) {
     try {
       const { id } = req.params;
@@ -93,6 +102,30 @@ class GateEntryController {
     } catch (error) {
       console.error('Error fetching gate entry:', error);
       res.status(500).json({ error: 'Failed to fetch gate entry' });
+    }
+  }
+
+  // Update gate entry status/remarks
+  static async update(req, res) {
+    try {
+      const { id } = req.params;
+      const { status, remarks } = req.body;
+      const updated = await GateEntryModel.update(id, { status, remarks });
+      if (!updated) return res.status(404).json({ error: 'Gate entry not found' });
+      res.json({ message: 'Gate entry updated', data: updated });
+    } catch (error) {
+      console.error('Error updating gate entry:', error);
+      res.status(500).json({ error: 'Failed to update gate entry' });
+    }
+  }
+
+  // Get vendors list for filter dropdown
+  static async getVendors(req, res) {
+    try {
+      const vendors = await GateEntryModel.getVendors();
+      res.json(vendors);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch vendors' });
     }
   }
 }

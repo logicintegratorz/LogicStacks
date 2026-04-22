@@ -14,7 +14,7 @@ const intentSchema = Joi.object({
         'number.base': 'Product ID must be a valid ID',
         'any.required': 'Product is required for an item'
       }),
-      unit: Joi.string().allow('', null), // Read-only but we allow it
+      unit: Joi.string().allow('', null),
       quantity: Joi.number().positive().required().messages({
         'number.positive': 'Quantity must be a positive number',
         'any.required': 'Quantity is required'
@@ -34,10 +34,8 @@ exports.createIntent = async (req, res, next) => {
     }
 
     const { indentDate, remarks, items } = value;
-    
-    // Create using transaction
     const newIntent = await IntentModel.create({ indentDate, remarks }, items);
-    
+
     res.status(201).json({
       success: true,
       message: 'Intent added successfully',
@@ -82,16 +80,16 @@ exports.approveIntent = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { approval_status } = req.body;
-    
+
     if (!['Pending', 'Approved', 'Rejected'].includes(approval_status)) {
-       return res.status(400).json({ success: false, message: 'Invalid approval status' });
+      return res.status(400).json({ success: false, message: 'Invalid approval status' });
     }
 
     const updated = await IntentModel.updateApprovalStatus(id, approval_status);
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Intent not found' });
     }
-    
+
     res.status(200).json({
       success: true,
       message: 'Approval status updated',
@@ -109,11 +107,10 @@ exports.completeIntent = async (req, res, next) => {
     const { status } = req.body; // 'Complete' or 'Incomplete'
 
     if (!['Incomplete', 'Complete'].includes(status)) {
-       return res.status(400).json({ success: false, message: 'Invalid status. Must be Complete or Incomplete.' });
+      return res.status(400).json({ success: false, message: 'Invalid status. Must be Complete or Incomplete.' });
     }
 
-    // According to rule: "status becomes Complete only when ALL items are processed/fulfilled"
-    // Since we are taking a straightforward PUT command from admin, we will allow it, but we can do further validation if item fulfillment is added.
+    // Note: "Undo Complete" (toggling back to Incomplete) is intentionally preserved — do not restrict it
     const updated = await IntentModel.updateCompleteStatus(id, status);
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Intent not found' });
@@ -126,6 +123,71 @@ exports.completeIntent = async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error completing intent:', error);
+    next(error);
+  }
+};
+
+exports.updateIntent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Guard: only Pending intents can be edited
+    const existing = await IntentModel.getById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Intent not found' });
+    }
+    if (existing.approval_status !== 'Pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only Pending intents can be edited'
+      });
+    }
+
+    const { error, value } = intentSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+
+    const { indentDate, remarks, items } = value;
+    const updatedIntent = await IntentModel.updateIntent(id, { indentDate, remarks }, items);
+
+    res.status(200).json({
+      success: true,
+      message: 'Intent updated successfully',
+      data: updatedIntent
+    });
+  } catch (error) {
+    console.error('Error updating intent:', error);
+    next(error);
+  }
+};
+
+exports.deleteIntent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Guard: only Pending intents can be deleted
+    const existing = await IntentModel.getById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Intent not found' });
+    }
+    if (existing.approval_status !== 'Pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only Pending intents can be deleted'
+      });
+    }
+
+    const deletedBy = req.user ? req.user.id : null;
+    const deletedIntent = await IntentModel.softDeleteIntent(id, deletedBy);
+
+    res.status(200).json({
+      success: true,
+      message: 'Intent deleted successfully',
+      data: deletedIntent
+    });
+  } catch (error) {
+    console.error('Error deleting intent:', error);
     next(error);
   }
 };

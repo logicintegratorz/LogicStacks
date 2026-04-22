@@ -8,20 +8,18 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/dashboard' },
-    { name: 'Order', path: '/order' },
     { name: 'Gate Entry', path: '/gate-entry' },
-    { name: 'Receipt', path: '/receipt' },
     { name: 'Indent Add', path: '/indent/add' },
     { name: 'Indents', path: '/indent/list' },
     { name: 'PO Add', path: '/po/add' },
     { name: 'PO List', path: '/po/list' },
     { name: 'Issue', path: '/issue' },
     { name: 'Issue List', path: '/issue/list' },
-    { name: 'Operations', path: '/operations' },
     { name: 'Products', path: '/products' },
+    { name: 'Reorder', path: '/reorder-products' },
     { name: 'Categories', path: '/categories' },
     { name: 'Parties', path: '/vendors' },
-    { name: 'Reports', path: '/reports' },
+    { name: 'Create User', path: '/register' },
   ];
 
   return (

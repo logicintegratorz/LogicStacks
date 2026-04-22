@@ -24,10 +24,19 @@ exports.createCategory = async (req, res, next) => {
 
 exports.updateCategory = async (req, res, next) => {
   try {
-    const { error } = categorySchema.validate(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message });
+    const { id } = req.params;
+    const { name, description } = req.body;
 
-    const updatedCategory = await CategoryModel.update(req.params.id, req.body);
+    // Fetch existing record to preserve is_active unless explicitly changed
+    const existing = await CategoryModel.getById(id);
+    if (!existing) return res.status(404).json({ message: 'Category not found' });
+
+    // Only overwrite is_active if the client explicitly sends a new value
+    const is_active = req.body.hasOwnProperty('is_active')
+      ? req.body.is_active
+      : existing.is_active;
+
+    const updatedCategory = await CategoryModel.update(id, { name, description, is_active });
     if (!updatedCategory) return res.status(404).json({ message: 'Category not found' });
 
     res.json(updatedCategory);

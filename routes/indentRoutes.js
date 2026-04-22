@@ -11,5 +11,7 @@ router.get('/', intentController.getIntents);
 router.get('/:id', intentController.getIntentById);
 router.put('/:id/approve', intentController.approveIntent);
 router.put('/:id/complete', intentController.completeIntent);
+router.put('/:id', intentController.updateIntent);
+router.delete('/:id', intentController.deleteIntent);
 
 module.exports = router;

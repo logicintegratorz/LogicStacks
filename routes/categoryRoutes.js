@@ -4,7 +4,7 @@ const categoryController = require('../controllers/categoryController');
 const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddleware');
 
 // All category routes require admin auth
-router.use(authMiddleware, adminMiddleware);
+router.use(authMiddleware);
 
 router.get('/', categoryController.getAllCategories);
 router.post('/', categoryController.createCategory);

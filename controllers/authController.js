@@ -9,7 +9,7 @@ exports.register = async (req, res, next) => {
     const { error } = registerSchema.validate(req.body);
     if (error) return res.status(400).json({ message: error.details[0].message });
 
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     
     const existingUser = await UserModel.findByEmail(email);
     if (existingUser) return res.status(400).json({ message: 'Email already exists' });
@@ -17,7 +17,7 @@ exports.register = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await UserModel.create({ name, email, password: hashedPassword, role: 'admin' });
+    const user = await UserModel.create({ name, email, password: hashedPassword, role: role || 'user' });
 
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: user.role },

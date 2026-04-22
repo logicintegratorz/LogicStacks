@@ -8,6 +8,7 @@ const loginSchema = Joi.object({
 const categorySchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   description: Joi.string().allow('', null).optional(),
+  is_active: Joi.boolean().optional(),
 });
 
 const productSchema = Joi.object({
@@ -25,12 +26,15 @@ const productSchema = Joi.object({
   min_days_required: Joi.number().integer().min(0).allow(null).optional(),
   average_delivery_days: Joi.number().integer().min(0).allow(null).optional(),
   location: Joi.string().max(150).allow('', null).optional(),
+  is_reorder: Joi.boolean().default(false),
+  preferred_vendor_id: Joi.number().integer().allow(null).optional(),
 });
 
 const registerSchema = Joi.object({
   name: Joi.string().min(2).max(100).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
+  role: Joi.string().valid('admin', 'manager', 'user').default('user').optional(),
 });
 
 module.exports = { loginSchema, registerSchema, categorySchema, productSchema };

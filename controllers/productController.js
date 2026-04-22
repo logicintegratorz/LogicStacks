@@ -12,6 +12,15 @@ exports.getAllProducts = async (req, res, next) => {
   }
 };
 
+exports.getReorderProducts = async (req, res, next) => {
+  try {
+    const products = await ProductModel.getReorderProducts();
+    res.json(products);
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getProductById = async (req, res, next) => {
   try {
     const product = await ProductModel.findById(req.params.id);

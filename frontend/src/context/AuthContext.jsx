@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 
 export const AuthContext = createContext();
@@ -35,11 +35,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password) => {
+  // Admin creates a new user — does NOT replace the current session
+  const register = async (name, email, password, role = 'user') => {
     try {
-      const res = await api.post('/auth/register', { name, email, password });
-      localStorage.setItem('token', res.data.token);
-      setUser(res.data.user);
+      await api.post('/auth/register', { name, email, password, role });
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Registration failed' };
@@ -57,3 +56,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

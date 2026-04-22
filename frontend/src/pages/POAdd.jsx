@@ -7,6 +7,7 @@ const POAdd = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const reorderPOId = location.state?.reorderPOId;
+  const editPOId = location.state?.editPOId;
   const today = new Date().toISOString().split('T')[0];
 
   const [poDate, setPoDate] = useState(today);
@@ -30,8 +31,10 @@ const POAdd = () => {
     fetchProducts();
     if (reorderPOId) {
        fetchReorderData(reorderPOId);
+    } else if (editPOId) {
+       fetchEditData(editPOId);
     }
-  }, [reorderPOId]);
+  }, [reorderPOId, editPOId]);
 
   const fetchReorderData = async (id) => {
     try {
@@ -62,6 +65,40 @@ const POAdd = () => {
     } catch (e) {
       console.error(e);
       toast.error('Failed to load Reorder data');
+    }
+  };
+
+  const fetchEditData = async (id) => {
+    try {
+      const res = await api.get(`/purchase-order/${id}`);
+      if (res.data.success) {
+         const oldPo = res.data.data;
+         setVendorId(String(oldPo.vendor_id));
+         setRemarks(oldPo.remarks || '');
+         setTermsConditions(oldPo.terms_conditions || '');
+         // Format the existing PO date for the date picker (YYYY-MM-DD)
+         if (oldPo.po_date) {
+             setPoDate(new Date(oldPo.po_date).toISOString().split('T')[0]);
+         }
+         
+         if (oldPo.items && oldPo.items.length > 0) {
+            const mappedItems = oldPo.items.map((item, idx) => ({
+              id: Date.now() + idx,
+              intentId: oldPo.intent_id ? String(oldPo.intent_id) : '',
+              intentItemId: item.intent_item_id || null,
+              productId: String(item.product_id),
+              nameLabel: item.product_name,
+              quantity: item.quantity,
+              unit: item.unit,
+              price: item.price,
+              amount: item.amount
+            }));
+            setItems(mappedItems);
+         }
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to load PO data for editing');
     }
   };
 
@@ -209,9 +246,15 @@ const POAdd = () => {
         }))
       };
 
-      const res = await api.post('/purchase-order', payload);
+      let res;
+      if (editPOId) {
+         res = await api.put(`/purchase-order/${editPOId}`, payload);
+      } else {
+         res = await api.post('/purchase-order', payload);
+      }
+      
       if (res.data.success) {
-        toast.success(res.data.message || 'PO generated successfully');
+        toast.success(res.data.message || (editPOId ? 'PO updated successfully' : 'PO generated successfully'));
         navigate('/po/list');
       } else {
         toast.error(res.data.message);
@@ -226,7 +269,7 @@ const POAdd = () => {
       
       {/* Header Section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#2d3748', margin: 0 }}>Add Purchase Order</h2>
+        <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#2d3748', margin: 0 }}>{editPOId ? 'Edit Purchase Order' : parentPoNumber ? 'Reorder Purchase Order' : 'Add Purchase Order'}</h2>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '15px' }}>
           <div style={{ fontSize: '13px', color: '#4a5568', fontWeight: '500' }}>
             Home <span style={{ color: '#a0aec0', margin: '0 5px' }}>&rsaquo;</span> Purchase Order <span style={{ color: '#a0aec0', margin: '0 5px' }}>&rsaquo;</span> <span style={{ color: '#a0aec0' }}>Add</span>
@@ -410,7 +453,7 @@ const POAdd = () => {
           </div>
 
           <button type="submit" style={{ padding: '12px 25px', background: '#3182ce', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>✓</span> Save Purchase Order
+            <span style={{ fontWeight: 'bold' }}>✓</span> {editPOId ? 'Update Purchase Order' : 'Save Purchase Order'}
           </button>
 
         </form>

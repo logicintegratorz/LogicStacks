@@ -6,25 +6,36 @@ const Register = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [role, setRole] = useState('user');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const { register } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        const res = await register(name, email, password);
+        setSuccess('');
+        const res = await register(name, email, password, role);
         if (res.success) {
-            navigate('/dashboard');
+            setSuccess(`User "${name}" created successfully as ${role}.`);
+            setName('');
+            setEmail('');
+            setPassword('');
+            setRole('user');
         } else {
             setError(res.message);
         }
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '100px auto', padding: '20px', border: '1px solid #e0e0e0', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', backgroundColor: '#fff' }}>
-            <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#333' }}>Create Admin Account</h2>
-            {error && <div style={{ color: '#d32f2f', padding: '10px', backgroundColor: '#fde0e0', borderRadius: '6px', marginBottom: '15px' }}>{error}</div>}
+        <div style={{ maxWidth: '420px', margin: '40px auto', padding: '28px', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', backgroundColor: '#fff' }}>
+            <h2 style={{ textAlign: 'center', marginBottom: '8px', color: '#1a202c' }}>Create New User</h2>
+            <p style={{ textAlign: 'center', color: '#718096', fontSize: '14px', marginBottom: '24px' }}>Admin-only — create accounts for staff members</p>
+
+            {error && <div style={{ color: '#c53030', padding: '10px', backgroundColor: '#fde0e0', borderRadius: '6px', marginBottom: '15px' }}>{error}</div>}
+            {success && <div style={{ color: '#2f855a', padding: '10px', backgroundColor: '#c6f6d5', borderRadius: '6px', marginBottom: '15px' }}>{success}</div>}
+
             <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#555' }}>Full Name</label>
@@ -46,23 +57,35 @@ const Register = () => {
                         style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '6px', boxSizing: 'border-box' }}
                     />
                 </div>
-                <div style={{ marginBottom: '10px' }}>
-                    <label>Password</label>
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#555' }}>Password</label>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength="6"
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '6px', boxSizing: 'border-box' }}
                     />
                 </div>
-                <button type="submit" style={{ width: '100%', padding: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>
-                    Register
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#555' }}>Role</label>
+                    <select
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '6px', boxSizing: 'border-box', backgroundColor: '#fff' }}
+                    >
+                        <option value="user">User</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" style={{ width: '100%', padding: '10px', background: '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+                    Create Account
                 </button>
             </form>
             <div style={{ marginTop: '15px', textAlign: 'center' }}>
-                <Link to="/login">Already have an account? Login</Link>
+                <Link to="/dashboard" style={{ color: '#718096', fontSize: '14px' }}>← Back to Dashboard</Link>
             </div>
         </div>
     );

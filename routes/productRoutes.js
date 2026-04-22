@@ -7,12 +7,13 @@ const { authMiddleware, adminMiddleware } = require('../middlewares/authMiddlewa
 router.use(authMiddleware);
 
 router.get('/', productController.getAllProducts);
-router.get('/dashboard', adminMiddleware, productController.getDashboardStats);
+router.get('/reorder', productController.getReorderProducts);
+router.get('/dashboard', productController.getDashboardStats);
 router.get('/:id', productController.getProductById);
 
 // Write operations require admin auth
-router.post('/', adminMiddleware, productController.createProduct);
-router.put('/:id', adminMiddleware, productController.updateProduct);
-router.delete('/:id', adminMiddleware, productController.deleteProduct);
+router.post('/', productController.createProduct);
+router.put('/:id', productController.updateProduct);
+router.delete('/:id', productController.deleteProduct);
 
 module.exports = router;

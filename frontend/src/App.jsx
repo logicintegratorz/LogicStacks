@@ -20,6 +20,8 @@ import VendorAdd from './pages/VendorAdd';
 import VendorList from './pages/VendorList';
 import GateEntryList from './pages/GateEntryList';
 import GateVerification from './pages/GateVerification';
+import GateEntryDetail from './pages/GateEntryDetail';
+import ReorderListing from './pages/ReorderListing';
 
 import './App.css';
 
@@ -30,14 +32,15 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
+
           <Route element={<ProtectedRoute />}>
+            <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
             <Route path="/categories" element={<Layout><Categories /></Layout>} />
             <Route path="/products" element={<Layout><Products /></Layout>} />
             <Route path="/products/add" element={<Layout><ProductFormPage /></Layout>} />
             <Route path="/products/edit/:id" element={<Layout><ProductFormPage /></Layout>} />
+            <Route path="/reorder-products" element={<Layout><ReorderListing /></Layout>} />
             <Route path="/issue" element={<Layout><IssueWIO /></Layout>} />
             <Route path="/issue/list" element={<Layout><IssueList /></Layout>} />
             <Route path="/indent/add" element={<Layout><IndentAdd /></Layout>} />
@@ -48,6 +51,7 @@ function App() {
             <Route path="/vendors/add" element={<Layout><VendorAdd /></Layout>} />
             <Route path="/gate-entry" element={<Layout><GateEntryList /></Layout>} />
             <Route path="/gate-entry/verify" element={<Layout><GateVerification /></Layout>} />
+            <Route path="/gate-entry/:id" element={<Layout><GateEntryDetail /></Layout>} />
           </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

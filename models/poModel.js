@@ -80,7 +80,7 @@ class POModel {
       FROM purchase_orders po
       JOIN vendors v ON po.vendor_id = v.id
       LEFT JOIN intents i ON po.intent_id = i.id
-      ORDER BY po.created_at DESC
+      WHERE po.is_deleted = FALSE ORDER BY po.created_at DESC
     `;
     const { rows } = await db.query(query);
     return rows;
@@ -142,6 +142,71 @@ class POModel {
     const { rows } = await db.query(query, [value, id]);
     return rows[0];
   }
+
+  static async updatePO(id, poData, items) {
+    const client = await db.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Update Purchase Order
+      const updatePOQuery = `
+        UPDATE purchase_orders
+        SET vendor_id = $1, po_date = $2, remarks = $3, terms_conditions = $4, total_amount = $5, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $6
+        RETURNING *
+      `;
+      const poRes = await client.query(updatePOQuery, [
+        poData.vendorId, poData.poDate, poData.remarks, poData.termsConditions, poData.totalAmount, id
+      ]);
+
+      if (poRes.rows.length === 0) {
+         throw new Error('Purchase Order not found');
+      }
+      
+      // Delete existing Items
+      await client.query('DELETE FROM purchase_order_items WHERE purchase_order_id = $1', [id]);
+
+      // Re-insert Items
+      const insertedItems = [];
+      for (const item of items) {
+        const insertItemQuery = `
+          INSERT INTO purchase_order_items (purchase_order_id, product_id, intent_item_id, quantity, unit, price, amount)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          RETURNING id, purchase_order_id, product_id, intent_item_id, quantity, unit, price, amount, received_quantity
+        `;
+        const itemRes = await client.query(insertItemQuery, [
+          id, item.productId, item.intentItemId || null, item.quantity, item.unit, item.price, item.amount
+        ]);
+        insertedItems.push(itemRes.rows[0]);
+      }
+      
+      const updatedPO = poRes.rows[0];
+      await client.query('COMMIT');
+      
+      return { ...updatedPO, items: insertedItems };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  static async softDeletePO(id, deletedBy) {
+    const query = `
+      UPDATE purchase_orders
+      SET is_deleted = TRUE, status = 'Cancelled'
+      WHERE id = $1
+      RETURNING *
+    `;
+    const { rows } = await db.query(query, [id]);
+    if (rows.length === 0) {
+      throw new Error('Purchase order not found');
+    }
+    return rows[0];
+  }
 }
 
 module.exports = POModel;
+ 

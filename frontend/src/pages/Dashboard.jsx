@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
 const Dashboard = () => {
-    const [stats, setStats] = useState({ totalProducts: 0, totalCategories: 0, lowStockItems: [] });
+    const [stats, setStats] = useState({ totalProducts: 0, totalCategories: 0, lowStockItems: [], totalInventoryValue: 0, totalInventoryItems: 0 });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

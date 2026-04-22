@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const authMiddleware = (req, res, next) => {
@@ -25,4 +25,12 @@ const adminMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+const managerMiddleware = (req, res, next) => {
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'manager')) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Access denied: Admin or Manager only' });
+  }
+};
+
+module.exports = { authMiddleware, adminMiddleware, managerMiddleware };

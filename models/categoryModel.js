@@ -19,15 +19,26 @@ class CategoryModel {
     return rows[0];
   }
 
+  // Alias used by controller for consistency
+  static async getById(id) {
+    return CategoryModel.findById(id);
+  }
+
   static async create({ name, description }) {
     const query = 'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING *';
     const { rows } = await db.query(query, [name, description]);
     return rows[0];
   }
 
-  static async update(id, { name, description }) {
-    const query = 'UPDATE categories SET name = $2, description = $3 WHERE id = $1 RETURNING *';
-    const { rows } = await db.query(query, [id, name, description]);
+  // Fixed: now accepts is_active so status is never silently reset on edit
+  static async update(id, { name, description, is_active }) {
+    const query = `
+      UPDATE categories
+      SET name = $2, description = $3, is_active = $4
+      WHERE id = $1
+      RETURNING *
+    `;
+    const { rows } = await db.query(query, [id, name, description, is_active]);
     return rows[0];
   }
 
