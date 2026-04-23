@@ -6,7 +6,7 @@ const Register = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('user');
+    const [role, setRole] = useState('User');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const { register } = useContext(AuthContext);
@@ -22,7 +22,7 @@ const Register = () => {
             setName('');
             setEmail('');
             setPassword('');
-            setRole('user');
+            setRole('User');
         } else {
             setError(res.message);
         }
@@ -75,9 +75,9 @@ const Register = () => {
                         onChange={(e) => setRole(e.target.value)}
                         style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '6px', boxSizing: 'border-box', backgroundColor: '#fff' }}
                     >
-                        <option value="user">User</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Admin</option>
+                        <option value="User">User</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Admin">Admin</option>
                     </select>
                 </div>
                 <button type="submit" style={{ width: '100%', padding: '10px', background: '#2b6cb0', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>

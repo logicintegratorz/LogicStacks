@@ -8,7 +8,7 @@ const seedAdmin = async () => {
         const email = 'admin@example.com';
         const password = 'admin@123';
         const hashedPassword = await bcrypt.hash(password, 10);
-        const role = 'admin';
+        const role = 'Admin';
 
         // Check if admin already exists
         const checkQuery = 'SELECT * FROM users WHERE email = $1';

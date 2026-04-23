@@ -13,7 +13,7 @@ class UserModel {
     return rows[0];
   }
 
-  static async create({ name, email, password, role = 'admin' }) {
+  static async create({ name, email, password, role = 'User' }) {
     const query = `
       INSERT INTO users (name, email, password, role)
       VALUES ($1, $2, $3, $4)

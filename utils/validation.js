@@ -34,7 +34,7 @@ const registerSchema = Joi.object({
   name: Joi.string().min(2).max(100).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  role: Joi.string().valid('admin', 'manager', 'user').default('user').optional(),
+  role: Joi.string().valid('Admin', 'Manager', 'User').default('User').optional(),
 });
 
 module.exports = { loginSchema, registerSchema, categorySchema, productSchema };

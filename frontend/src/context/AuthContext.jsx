@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Admin creates a new user — does NOT replace the current session
-  const register = async (name, email, password, role = 'user') => {
+  const register = async (name, email, password, role = 'User') => {
     try {
       await api.post('/auth/register', { name, email, password, role });
       return { success: true };
