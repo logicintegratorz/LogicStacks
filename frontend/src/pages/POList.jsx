@@ -257,9 +257,6 @@ const POList = () => {
                 <div style={{ textAlign: 'right' }}><span style={{ color: '#a0aec0', fontSize: '12px', display: 'block' }}>Date</span><div style={{ fontWeight: 600, color: '#2d3748', fontSize: '15px' }}>{new Date(selectedPO.po_date).toLocaleDateString('en-GB')}</div></div>
                 <div><span style={{ color: '#a0aec0', fontSize: '12px', display: 'block' }}>Vendor</span><div style={{ fontWeight: 600, color: '#2d3748', fontSize: '15px' }}>{selectedPO.vendor_name}</div></div>
                 <div style={{ textAlign: 'right' }}><span style={{ color: '#a0aec0', fontSize: '12px', display: 'block' }}>Status</span><div style={{ fontWeight: 600, color: '#2d3748', fontSize: '15px' }}>{selectedPO.status}</div></div>
-                {selectedPO.terms_conditions && (
-                  <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#a0aec0', fontSize: '12px', display: 'block' }}>Terms & Conditions</span><div style={{ fontWeight: 500, color: '#4a5568', fontSize: '13px' }}>{selectedPO.terms_conditions}</div></div>
-                )}
               </div>
 
               {/* Items */}
@@ -289,6 +286,24 @@ const POList = () => {
                   </tr>
                 </tfoot>
               </table>
+
+              {/* Remarks and T&C (Bottom) */}
+              {(selectedPO.remarks || selectedPO.terms_conditions) && (
+                <div style={{ marginTop: '20px', padding: '16px', background: '#f7fafc', borderRadius: '8px', border: '1px solid #edf2f7' }}>
+                  {selectedPO.remarks && (
+                    <div style={{ marginBottom: selectedPO.terms_conditions ? '12px' : '0' }}>
+                      <span style={{ color: '#a0aec0', fontSize: '12px', fontWeight: 'bold', display: 'block', textTransform: 'uppercase' }}>Remarks</span>
+                      <div style={{ fontWeight: 500, color: '#2d3748', fontSize: '13px', marginTop: '4px' }}>{selectedPO.remarks}</div>
+                    </div>
+                  )}
+                  {selectedPO.terms_conditions && (
+                    <div>
+                      <span style={{ color: '#a0aec0', fontSize: '12px', fontWeight: 'bold', display: 'block', textTransform: 'uppercase' }}>Terms & Conditions</span>
+                      <div style={{ fontWeight: 500, color: '#4a5568', fontSize: '13px', marginTop: '4px', whiteSpace: 'pre-wrap' }}>{selectedPO.terms_conditions}</div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: '12px', color: '#718096' }}>Prepared By: ___________</div>

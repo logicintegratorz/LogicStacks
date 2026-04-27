@@ -31,7 +31,7 @@ const Dashboard = () => {
                 </div>
                 <div className="metric-card gradient-green">
                     <h3 style={{ color: '#4a5568', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.05em' }}>Total Est. Value</h3>
-                    <p style={{ fontSize: '32px', fontWeight: '800', color: '#38a169', margin: 0 }}>${stats.totalInventoryValue.toLocaleString()}</p>
+                    <p style={{ fontSize: '32px', fontWeight: '800', color: '#38a169', margin: 0 }}>₹ {stats.totalInventoryValue.toLocaleString()}</p>
                 </div>
                 <div className="metric-card gradient-purple">
                     <h3 style={{ color: '#4a5568', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.05em' }}>Total Physical Items</h3>

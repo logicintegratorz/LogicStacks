@@ -8,6 +8,7 @@ const intentController = require('../controllers/intentController');
 
 router.post('/', intentController.createIntent);
 router.get('/', intentController.getIntents);
+router.get('/available', intentController.getAvailableIntents);
 router.get('/:id', intentController.getIntentById);
 router.put('/:id/approve', intentController.approveIntent);
 router.put('/:id/complete', intentController.completeIntent);

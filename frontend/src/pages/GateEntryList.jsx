@@ -236,8 +236,13 @@ const GateEntryList = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {entries.map(e => (
-                      <tr key={e.id}>
+                    {entries.map(e => {
+                      let bg = 'transparent';
+                      if (e.status === 'PARTIAL') bg = '#fff7ed';
+                      if (e.status === 'FULLY_RECEIVED') bg = '#f0fdf4';
+                      if (e.status === 'REJECTED') bg = '#fef2f2';
+                      return (
+                      <tr key={e.id} style={{ backgroundColor: bg }}>
                         <td style={cellStyle}><span style={{ fontWeight: '700', color: '#4a5568' }}>#{e.id}</span></td>
                         <td style={cellStyle}><span style={{ color: '#2b6cb0', fontWeight: '600' }}>{e.po_number}</span></td>
                         <td style={cellStyle}>{e.vendor_name}</td>
@@ -261,7 +266,8 @@ const GateEntryList = () => {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

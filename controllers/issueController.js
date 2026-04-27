@@ -8,6 +8,13 @@ exports.createIssue = async (req, res, next) => {
       return res.status(400).json({ message: 'Must provide at least one item to issue.' });
     }
 
+    for (let i = 0; i < items.length; i++) {
+      const { department_id, person_name } = items[i];
+      if (!department_id && !person_name) {
+         return res.status(400).json({ message: `Row ${i + 1}: Must provide either Department or Person Name.` });
+      }
+    }
+
     const userId = req.user ? req.user.id : 1;
     const result = await IssueModel.createIssue(items, userId);
     res.status(201).json({ message: 'Items issued successfully', issue_id: result.issue_id });
@@ -28,16 +35,17 @@ exports.getAnalytics = async (req, res, next) => {
   }
 };
 
-// GET /api/issues — supports optional filters: category_id, department_id, product_id, date_from, date_to
+// GET /api/issues — supports optional filters: category_id, department_id, product_id, date_from, date_to, person_name
 exports.getAllIssues = async (req, res, next) => {
   try {
-    const { category_id, department_id, product_id, date_from, date_to } = req.query;
+    const { category_id, department_id, product_id, date_from, date_to, person_name } = req.query;
     const issues = await IssueModel.getAllIssues({
       category_id: category_id || null,
       department_id: department_id || null,
       product_id: product_id || null,
       date_from: date_from || null,
-      date_to: date_to || null
+      date_to: date_to || null,
+      person_name: person_name || null
     });
     res.json(issues);
   } catch (err) {

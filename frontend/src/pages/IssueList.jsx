@@ -236,7 +236,7 @@ const IssueList = () => {
                     <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568' }}>Sr.</th>
                     <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568' }}>Product</th>
                     <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568' }}>Category</th>
-                    <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568' }}>Dept</th>
+                    <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568' }}>Dept / Person</th>
                     <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568' }}>Issue Date</th>
                     <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568', textAlign: 'right' }}>Qty</th>
                     <th style={{ padding: '14px 12px', fontWeight: '600', color: '#4a5568', textAlign: 'right' }}>Avg Price</th>
@@ -253,7 +253,8 @@ const IssueList = () => {
                         <td style={{ padding: '14px 12px', fontWeight: 'bold', color: '#2d3748' }}>{item.product_name}</td>
                         <td style={{ padding: '14px 12px', color: '#718096' }}>{item.category_name || '-'}</td>
                         <td style={{ padding: '14px 12px' }}>
-                          <span style={{ backgroundColor: '#ebf8ff', color: '#3182ce', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>{item.department_name}</span>
+                          <span style={{ backgroundColor: '#ebf8ff', color: '#3182ce', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', display: 'inline-block' }}>{item.department_name || '-'}</span>
+                          {item.person_name && <div style={{ fontSize: '12px', color: '#718096', fontWeight: '500', marginTop: '4px' }}>👤 {item.person_name}</div>}
                         </td>
                         <td style={{ padding: '14px 12px', color: '#718096' }}>{new Date(item.issue_date).toLocaleDateString('en-GB').replace(/\//g, '-')}</td>
                         <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 'bold', color: '#4a5568' }}>{item.issued_qty}</td>

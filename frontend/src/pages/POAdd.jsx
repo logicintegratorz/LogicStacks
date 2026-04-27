@@ -111,8 +111,8 @@ const POAdd = () => {
 
   const fetchIntents = async () => {
     try {
-      // Fetch intents that have items (Completed or Incomplete, usually Approved ones in a real system)
-      const res = await api.get('/indent');
+      // Fetch intents that are not yet linked to an active PO
+      const res = await api.get('/indent/available');
       if (res.data.success) setIntents(res.data.data);
     } catch(e) { console.error(e); }
   };
@@ -132,21 +132,11 @@ const POAdd = () => {
 
   const handleIntentSelect = (index, selectedIntentIdStr) => {
     const selectedIntentId = parseInt(selectedIntentIdStr, 10);
-    const newItems = [...items];
-    const row = newItems[index];
+    
+    // Clear all previously loaded products/items and set one initial row
+    const row = { id: Date.now(), intentId: selectedIntentIdStr, intentItemId: null, productId: '', nameLabel: '', quantity: '', unit: '', price: '', amount: 0 };
+    const newItems = [row];
 
-    row.intentId = selectedIntentIdStr; // Keep as string or int for select 
-    row.intentItemId = null;
-    row.productId = '';
-    row.nameLabel = '';
-    row.quantity = '';
-    row.unit = '';
-    row.price = '';
-    row.amount = 0;
-
-    // Auto-load logic: If this intent has items, we could auto-expand into multiple rows.
-    // For simplicity matching the image where explicit UI dropdown is shown per row:
-    // If an intent is selected, and it has EXACTLY 1 item, auto fill it. If more, require user to pick.
     if (selectedIntentId) {
       const intentObj = intents.find(i => i.id === selectedIntentId);
       if (intentObj && intentObj.items && intentObj.items.length === 1) {
@@ -219,7 +209,7 @@ const POAdd = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!vendorId) return toast.error('Please select a vendor.');
+    if (!vendorId) return toast.error('Please select a Vendor to proceed.');
     if (!poDate) return toast.error('PO Date is required.');
     
     // Check items

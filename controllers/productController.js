@@ -39,6 +39,9 @@ exports.createProduct = async (req, res, next) => {
     const newProduct = await ProductModel.create(value);
     res.status(201).json(newProduct);
   } catch (err) {
+    if (err.code === '23505' && err.constraint === 'products_sku_unique') {
+      return res.status(400).json({ message: 'SKU already in use by another product' });
+    }
     next(err);
   }
 };
@@ -53,6 +56,9 @@ exports.updateProduct = async (req, res, next) => {
 
     res.json(updatedProduct);
   } catch (err) {
+    if (err.code === '23505' && err.constraint === 'products_sku_unique') {
+      return res.status(400).json({ message: 'SKU already in use by another product' });
+    }
     next(err);
   }
 };

@@ -4,9 +4,18 @@ const VendorModel = require('../models/vendorModel');
 exports.createPO = async (req, res, next) => {
   try {
     const { vendorId, poDate, remarks, termsConditions, items, parentPoId } = req.body;
+    const intentId = req.body.intentId || null;
 
     if (!vendorId || !items || items.length === 0) {
-      return res.status(400).json({ success: false, message: 'Vendor and at least one item are required' });
+      return res.status(400).json({ success: false, message: 'Please select a Vendor to proceed.' });
+    }
+
+    // Prevent using an already-linked intent
+    if (intentId) {
+      const existing = await POModel.findByIntentId(intentId);
+      if (existing) {
+        return res.status(400).json({ success: false, message: 'This Indent is already linked to an existing Purchase Order and cannot be reused.' });
+      }
     }
 
     // Auto calculate totalAmount to prevent tampering
@@ -209,9 +218,7 @@ exports.updatePO = async (req, res, next) => {
     });
 
     const productIds = validatedItems.map(item => item.productId);
-    if (new Set(productIds).size !== productIds.length) {
-      return res.status(400).json({ success: false, message: 'Duplicate products not allowed' });
-    }
+   
 
     const updatedPO = await POModel.updatePO(id, { vendorId, poDate, remarks, termsConditions, totalAmount }, validatedItems);
 
@@ -235,7 +242,8 @@ exports.deletePO = async (req, res, next) => {
     //   return res.status(403).json({ success: false, message: 'Only admins can delete Purchase Orders' });
     // }
 
-    const deletedPO = await POModel.softDeletePO(id, req.user.id);
+    const deletedBy = req.user ? req.user.id : null;
+    const deletedPO = await POModel.softDeletePO(id, deletedBy);
 
     res.status(200).json({
       success: true,

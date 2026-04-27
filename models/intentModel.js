@@ -73,6 +73,44 @@ class IntentModel {
     return rows;
   }
 
+  // Returns only intents NOT already linked to an active (non-rejected) PO
+  static async getAvailable() {
+    const query = `
+      SELECT 
+        i.id,
+        i.intend_no,
+        i.intend_date AS indent_date,
+        i.status,
+        i.approval_status,
+        i.remarks,
+        i.created_at,
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'id', ii.id,
+            'product_id', ii.product_id,
+            'product_name', p.name,
+            'unit', ii.unit,
+            'quantity', ii.quantity
+          )
+        ) FILTER (WHERE ii.id IS NOT NULL) AS items
+      FROM intents i
+      LEFT JOIN intent_items ii ON i.id = ii.intent_id
+      LEFT JOIN products p ON ii.product_id = p.id
+      WHERE i.is_deleted = FALSE
+        AND i.approval_status = 'Approved'
+        AND i.id NOT IN (
+          SELECT intent_id FROM purchase_orders
+          WHERE intent_id IS NOT NULL
+            AND approval_status != 'Rejected'
+            AND is_deleted = FALSE
+        )
+      GROUP BY i.id
+      ORDER BY i.created_at DESC
+    `;
+    const { rows } = await db.query(query);
+    return rows;
+  }
+
   static async getById(id) {
     const query = `
       SELECT 

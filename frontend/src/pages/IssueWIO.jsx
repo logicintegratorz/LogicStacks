@@ -6,7 +6,7 @@ const IssueWIO = () => {
     const [departments, setDepartments] = useState([]);
     
     // Each row represents an item being issued.
-    const emptyRow = { id: Date.now(), product_id: '', issued_qty: '', department_id: '', remarks: '' };
+    const emptyRow = { id: Date.now(), product_id: '', issued_qty: '', department_id: '', person_name: '', remarks: '' };
     const [rows, setRows] = useState([{ ...emptyRow }]);
     
     const [loading, setLoading] = useState(true);
@@ -69,7 +69,7 @@ const IssueWIO = () => {
             const rowNum = i + 1;
             
             if (!row.product_id) return setError(`Row ${rowNum}: Please select a product.`);
-            if (!row.department_id) return setError(`Row ${rowNum}: Please select a department.`);
+            if (!row.department_id && !row.person_name) return setError(`Row ${rowNum}: Please select a Department OR enter a Person Name.`);
             
             const qty = parseInt(row.issued_qty);
             if (isNaN(qty) || qty <= 0) return setError(`Row ${rowNum}: Quantity must be greater than 0.`);
@@ -80,6 +80,7 @@ const IssueWIO = () => {
             itemsToSubmit.push({
                 product_id: row.product_id,
                 department_id: row.department_id,
+                person_name: row.person_name,
                 issued_qty: qty,
                 remarks: row.remarks
             });
@@ -122,7 +123,8 @@ const IssueWIO = () => {
                         <th style={{ padding: '12px', width: '250px' }}>Product Code</th>
                         <th style={{ padding: '12px', width: '120px' }}>Product Qty.</th>
                         <th style={{ padding: '12px', width: '120px' }}>Available</th>
-                        <th style={{ padding: '12px', width: '200px' }}>Issue To</th>
+                        <th style={{ padding: '12px', width: '200px' }}>Department</th>
+                        <th style={{ padding: '12px', width: '200px' }}>Person Name</th>
                         <th style={{ padding: '12px' }}>Remarks</th>
                         <th style={{ padding: '12px', width: '60px', textAlign: 'center' }}>Action</th>
                     </tr>
@@ -171,6 +173,16 @@ const IssueWIO = () => {
                                         <option key={d.department_id} value={d.department_id}>{d.department_name}</option>
                                     ))}
                                 </select>
+                            </td>
+                            <td style={{ padding: '12px' }}>
+                                <input 
+                                    type="text"
+                                    maxLength="150"
+                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #cbd5e0' }}
+                                    value={row.person_name}
+                                    onChange={e => handleRowChange(row.id, 'person_name', e.target.value)}
+                                    placeholder="Enter Name"
+                                />
                             </td>
                             <td style={{ padding: '12px' }}>
                                 <input 

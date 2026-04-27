@@ -86,6 +86,19 @@ class POModel {
     return rows;
   }
 
+  // Returns an existing PO linked to this intent (if any) — used to prevent double-use
+  static async findByIntentId(intentId) {
+    const query = `
+      SELECT id FROM purchase_orders
+      WHERE intent_id = $1
+        AND approval_status != 'Rejected'
+        AND is_deleted = FALSE
+      LIMIT 1
+    `;
+    const { rows } = await db.query(query, [intentId]);
+    return rows[0] || null;
+  }
+
   static async getById(id) {
     const query = `
       SELECT 
@@ -196,11 +209,11 @@ class POModel {
   static async softDeletePO(id, deletedBy) {
     const query = `
       UPDATE purchase_orders
-      SET is_deleted = TRUE, status = 'Cancelled'
+      SET is_deleted = TRUE, status = 'Cancelled', deleted_by = $2, deleted_at = NOW()
       WHERE id = $1
       RETURNING *
     `;
-    const { rows } = await db.query(query, [id]);
+    const { rows } = await db.query(query, [id, deletedBy || null]);
     if (rows.length === 0) {
       throw new Error('Purchase order not found');
     }

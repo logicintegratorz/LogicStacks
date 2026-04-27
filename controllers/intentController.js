@@ -34,6 +34,10 @@ exports.createIntent = async (req, res, next) => {
     }
 
     const { indentDate, remarks, items } = value;
+    const productid=items.map(item=>item.productId);
+    if( new Set(productid).size !== productid.length){
+      return res.status(400).json({ success: false, message: 'Duplicate products found' });
+    }     
     const newIntent = await IntentModel.create({ indentDate, remarks }, items);
 
     res.status(201).json({
@@ -59,6 +63,17 @@ exports.getIntents = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getAvailableIntents = async (req, res, next) => {
+  try {
+    const intents = await IntentModel.getAvailable();
+    res.status(200).json({ success: true, data: intents });
+  } catch (error) {
+    console.error('Error fetching available intents:', error);
+    next(error);
+  }
+};
+
 
 exports.getIntentById = async (req, res, next) => {
   try {

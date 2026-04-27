@@ -34,7 +34,7 @@ class GateEntryController {
           AND po.status IN ('Ordered', 'Partially Received')
           AND po.is_deleted = FALSE
         GROUP BY po.id, v.name
-        ORDER BY po.created_at ASC
+        ORDER BY po.created_at DESC
       `;
       const { rows } = await db.query(query);
       res.json(rows);

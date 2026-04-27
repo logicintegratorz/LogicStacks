@@ -28,11 +28,20 @@ class ProductModel {
 
   static async getReorderProducts() {
     const query = `
-      SELECT p.*, c.name AS category_name, v.name AS preferred_vendor_name
+      SELECT p.*, c.name AS category_name, v.name AS preferred_vendor_name,
+        (
+          SELECT gei.unit_price 
+          FROM gate_entries ge
+          JOIN gate_entry_items gei ON ge.id = gei.gate_entry_id
+          WHERE gei.product_id = p.id
+          ORDER BY ge.received_date DESC, ge.id DESC
+          LIMIT 1
+        ) AS last_purchase_price
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN vendors v ON p.preferred_vendor_id = v.id
       WHERE p.is_reorder = true
+        AND EXISTS (SELECT 1 FROM issue_details id WHERE id.product_id = p.id)
       ORDER BY p.name ASC
     `;
     const { rows } = await db.query(query);

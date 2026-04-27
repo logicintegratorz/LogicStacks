@@ -16,7 +16,7 @@ class IssueModel {
       const issueId = masterRes.rows[0].issue_id;
 
       for (const item of items) {
-        const { product_id, department_id, issued_qty, remarks } = item;
+        const { product_id, department_id, person_name, issued_qty, remarks } = item;
 
         if (issued_qty <= 0) {
           throw new Error('Issue quantity must be greater than 0.');
@@ -36,9 +36,9 @@ class IssueModel {
         }
 
         await client.query(
-          `INSERT INTO issue_details (issue_id, product_id, department_id, issued_qty, remarks)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [issueId, product_id, department_id, issued_qty, remarks || null]
+          `INSERT INTO issue_details (issue_id, product_id, department_id, person_name, issued_qty, remarks)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [issueId, product_id, department_id || null, person_name || null, issued_qty, remarks || null]
         );
 
         await client.query(
@@ -116,6 +116,7 @@ class IssueModel {
         p.name AS product_name,
         c.name AS category_name,
         d.department_name,
+        id.person_name,
         im.issue_date,
         id.issued_qty,
         COALESCE(p.party_price, p.opening_stock_price, 0) AS avg_price,
@@ -131,6 +132,7 @@ class IssueModel {
         AND ($3::int IS NULL OR id.product_id = $3)
         AND ($4::date IS NULL OR DATE(im.issue_date) >= $4::date)
         AND ($5::date IS NULL OR DATE(im.issue_date) <= $5::date)
+        AND ($6::varchar IS NULL OR id.person_name ILIKE '%' || $6 || '%')
       ORDER BY im.issue_date DESC
     `;
     const { rows } = await pool.query(query, [
@@ -138,7 +140,8 @@ class IssueModel {
       department_id || null,
       product_id || null,
       date_from || null,
-      date_to || null
+      date_to || null,
+      arguments[0].person_name || null
     ]);
     return rows;
   }

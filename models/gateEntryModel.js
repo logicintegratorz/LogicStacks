@@ -86,12 +86,6 @@ class GateEntryModel {
         }
       }
 
-      // 3. Update gate entry header with computed totals
-      await client.query(
-        `UPDATE gate_entries SET total_ordered_qty=$1, total_received_qty=$2, total_extra_qty=$3 WHERE id=$4`,
-        [totalOrderedQty, totalReceivedQty, totalExtraQty, newEntry.id]
-      );
-
       // 4. Auto-determine PO status from cumulative received quantities
       const { rows: poItems } = await client.query(
         `SELECT quantity, received_quantity FROM purchase_order_items WHERE purchase_order_id = $1`,
@@ -102,6 +96,21 @@ class GateEntryModel {
         r => Number(r.received_quantity) >= Number(r.quantity)
       );
       const anyReceived = poItems.some(r => Number(r.received_quantity) > 0);
+
+      // 3. Update gate entry header with computed totals
+      const finalEntryStatus = allReceived ? 'FULLY_RECEIVED' : entryData.status;
+      await client.query(
+        `UPDATE gate_entries SET total_ordered_qty=$1, total_received_qty=$2, total_extra_qty=$3, status=$4 WHERE id=$5`,
+        [totalOrderedQty, totalReceivedQty, totalExtraQty, finalEntryStatus, newEntry.id]
+      );
+
+      // 5. Update ALL previous gate entries for this PO to FULLY_RECEIVED if PO is fully received
+      if (allReceived) {
+        await client.query(
+          `UPDATE gate_entries SET status = 'FULLY_RECEIVED' WHERE po_id = $1 AND id != $2`,
+          [entryData.poId, newEntry.id]
+        );
+      }
 
       const newPOStatus = allReceived ? 'Received' : anyReceived ? 'Partially Received' : 'Ordered';
 

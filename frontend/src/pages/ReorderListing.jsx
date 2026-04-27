@@ -40,7 +40,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
-    minWidth: '250px'
+    minWidth: '200px'
   },
   label: {
     fontSize: '14px',
@@ -102,17 +102,32 @@ const styles = {
     padding: '40px',
     textAlign: 'center',
     color: '#64748b'
+  },
+  modalOverlay: {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+    alignItems: 'center', justifyContent: 'center', zIndex: 1000
+  },
+  modalContent: {
+    backgroundColor: '#fff', padding: '24px', borderRadius: '8px',
+    width: '500px', maxWidth: '90%', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
   }
 };
 
 const ReorderListing = () => {
   const [products, setProducts] = useState([]);
   const [vendors, setVendors] = useState([]);
-  const [selectedVendor, setSelectedVendor] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState({});
   const [quantities, setQuantities] = useState({});
   const navigate = useNavigate();
+
+  // Filter states
+  const [filterVendor, setFilterVendor] = useState('');
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalVendorId, setModalVendorId] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -124,17 +139,16 @@ const ReorderListing = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Fetch Reorder products and Vendors in parallel
       const [productsRes, vendorsRes] = await Promise.all([
         axios.get('http://localhost:5000/api/products/reorder', { headers }),
         axios.get('http://localhost:5000/api/purchase-order/vendors', { headers })
       ]);
 
-      setProducts(productsRes.data);
+      setProducts(productsRes.data || []);
       setVendors(vendorsRes.data.data || []);
       
       const defaultQuantities = {};
-      productsRes.data.forEach(p => {
+      (productsRes.data || []).forEach(p => {
          defaultQuantities[p.id] = 1;
       });
       setQuantities(defaultQuantities);
@@ -156,7 +170,7 @@ const ReorderListing = () => {
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       const allSelected = {};
-      products.forEach(p => { allSelected[p.id] = true; });
+      filteredProducts.forEach(p => { allSelected[p.id] = true; });
       setSelectedItems(allSelected);
     } else {
       setSelectedItems({});
@@ -170,14 +184,19 @@ const ReorderListing = () => {
     }));
   };
 
-  const handleCreatePO = async () => {
+  const openModal = () => {
     const selectedProductIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
-    
     if (selectedProductIds.length === 0) {
       return toast.error('Please select at least one product');
     }
-    if (!selectedVendor) {
-      return toast.error('Please select a vendor');
+    setIsModalOpen(true);
+  };
+
+  const handleCreatePO = async () => {
+    const selectedProductIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
+    
+    if (!modalVendorId) {
+      return toast.error('Please select a vendor for the Purchase Order');
     }
 
     try {
@@ -188,7 +207,7 @@ const ReorderListing = () => {
 
       const token = localStorage.getItem('token');
       const payload = {
-        vendor_id: parseInt(selectedVendor),
+        vendor_id: parseInt(modalVendorId),
         items_with_qty: itemsToOrder
       };
 
@@ -198,9 +217,8 @@ const ReorderListing = () => {
 
       if (res.data && res.data.success) {
         toast.success(res.data.message || 'Purchase Order Created!');
-        // Deselect items
         setSelectedItems({});
-        // Redirect to PO list
+        setIsModalOpen(false);
         navigate('/po/list');
       }
     } catch (error) {
@@ -209,7 +227,13 @@ const ReorderListing = () => {
     }
   };
 
-  const areAllSelected = products.length > 0 && Object.keys(selectedItems).filter(id => selectedItems[id]).length === products.length;
+  const filteredProducts = products.filter(p => {
+    if (filterVendor && String(p.preferred_vendor_id) !== filterVendor) return false;
+    return true;
+  });
+
+  const areAllSelected = filteredProducts.length > 0 && Object.keys(selectedItems).filter(id => selectedItems[id]).length === filteredProducts.length;
+  const hasSelection = Object.values(selectedItems).some(Boolean);
 
   if (loading) return <div style={styles.container}>Loading reorder items...</div>;
 
@@ -222,29 +246,29 @@ const ReorderListing = () => {
       <div style={styles.card}>
         <div style={styles.controlsSection}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Select Vendor</label>
+            <label style={styles.label}>Filter by Preferred Vendor</label>
             <select 
               style={styles.select}
-              value={selectedVendor}
-              onChange={(e) => setSelectedVendor(e.target.value)}
+              value={filterVendor}
+              onChange={(e) => setFilterVendor(e.target.value)}
             >
-              <option value="">-- Select Vendor --</option>
+              <option value="">All Vendors</option>
               {vendors.map(v => (
                 <option key={v.id} value={v.id}>{v.name}</option>
               ))}
             </select>
           </div>
           
-          <div style={{...styles.formGroup, justifyContent: 'flex-end'}}>
+          <div style={{...styles.formGroup, justifyContent: 'flex-end', flex: 1, alignItems: 'flex-end'}}>
              <button 
                style={{
                  ...styles.button,
-                 ...(Object.values(selectedItems).some(Boolean) ? {} : styles.buttonDisabled)
+                 ...(!hasSelection ? styles.buttonDisabled : {})
                }} 
-               onClick={handleCreatePO}
-               disabled={!Object.values(selectedItems).some(Boolean)}
+               onClick={openModal}
+               disabled={!hasSelection}
              >
-               Add to Purchase Order
+               Add to P.O.
              </button>
           </div>
         </div>
@@ -263,17 +287,23 @@ const ReorderListing = () => {
                 <th style={styles.th}>Product Name</th>
                 <th style={styles.th}>Category</th>
                 <th style={styles.th}>SKU</th>
+                <th style={styles.th}>Vendor</th>
                 <th style={styles.th}>Price</th>
                 <th style={styles.th}>Qty to Order</th>
               </tr>
             </thead>
             <tbody>
-              {products.length === 0 ? (
+              {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={styles.emptyState}>No products found marked for reorder</td>
+                  <td colSpan="7" style={styles.emptyState}>No products found marked for reorder</td>
                 </tr>
               ) : (
-                products.map((product) => (
+                filteredProducts.map((product) => {
+                  const partyPrice = parseFloat(product.party_price || 0);
+                  const lastPurchasePrice = parseFloat(product.last_purchase_price || 0);
+                  const hasPriceMismatch = product.last_purchase_price !== null && partyPrice !== lastPurchasePrice;
+
+                  return (
                   <tr key={product.id} style={{ backgroundColor: selectedItems[product.id] ? '#f0f9ff' : 'transparent' }}>
                     <td style={styles.td}>
                       <input 
@@ -294,7 +324,13 @@ const ReorderListing = () => {
                       </span>
                     </td>
                     <td style={styles.td}>{product.sku || '-'}</td>
-                    <td style={{...styles.td, fontWeight: '500'}}>${parseFloat(product.party_price || 0).toFixed(2)}</td>
+                    <td style={styles.td}>{product.preferred_vendor_name || '-'}</td>
+                    <td style={{...styles.td, fontWeight: '500'}}>
+                      ₹{partyPrice.toFixed(2)}
+                      {hasPriceMismatch && (
+                        <span title={`Mismatch! Last purchase price was ₹${lastPurchasePrice.toFixed(2)}`} style={{ marginLeft: '6px', color: '#e53e3e', fontSize: '16px', cursor: 'help' }}>🔴</span>
+                      )}
+                    </td>
                     <td style={styles.td}>
                        <input 
                           type="number"
@@ -305,12 +341,54 @@ const ReorderListing = () => {
                        />
                     </td>
                   </tr>
-                ))
+                )})
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <h2 style={{ marginTop: 0, fontSize: '20px', color: '#2d3748' }}>Create Purchase Order</h2>
+            <p style={{ color: '#4a5568', fontSize: '14px', marginBottom: '20px' }}>
+              You have selected {Object.values(selectedItems).filter(Boolean).length} items to reorder.
+            </p>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#4a5568', marginBottom: '8px' }}>
+                Select PO Vendor <span style={{ color: '#e53e3e' }}>*</span>
+              </label>
+              <select 
+                style={{ ...styles.select, width: '100%' }}
+                value={modalVendorId}
+                onChange={(e) => setModalVendorId(e.target.value)}
+              >
+                <option value="">-- Choose Vendor --</option>
+                {vendors.map(v => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                style={{ padding: '10px 20px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#4a5568', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleCreatePO}
+                style={styles.button}
+              >
+                Confirm & Create P.O.
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
